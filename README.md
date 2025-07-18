@@ -40,7 +40,7 @@ Fake-Review-and-Fraud-Detection/
 │   ├── about.html             # About page
 │   └── styles.css             # Modern CSS styling
 └── datasets/                   # 📊 Dataset storage
-    ├── fake reviews dataset.csv # Labeled dataset for training
+    └── fake reviews dataset.csv # Labeled dataset for training
 ```
 
 ## 🛠️ Quick Start
