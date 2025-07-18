@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Review Detector - Batch Analysis</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar (Copied from index.html) -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🚨</span>
+                <span class="logo-text">Fake Review Detector</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link">🏠 Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/batch" class="nav-link active">📊 Batch Analysis</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/accuracy" class="nav-link">🎯 Accuracy Testing</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/fine_tune" class="nav-link">🛠️ Fine-tune & Validate</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/about" class="nav-link">ℹ️ About</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero-section">
+            <h1>📊 Batch Review Analysis</h1>
+            <p class="hero-subtitle">Process large datasets of reviews efficiently with our advanced detection system</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="analysis-card">
+                <h2>📁 Upload CSV File</h2>
+                <p>Upload a CSV file containing reviews to analyze them in batch. The system will process multiple reviews and provide comprehensive results.</p>
+                
+                <div class="form-group">
+                    <label>Upload CSV File:</label>
+                    <input type="file" id="csvFile" accept=".csv">
+                </div>
+                <button id="uploadBtn" class="btn-secondary">📁 Upload and Analyze</button>
+                
+                <div id="csvInfo" style="display:none;" class="fade-in">
+                    <div class="signal-card">
+                        <h4>📈 File Information</h4>
+                        <p><strong>Total reviews in file:</strong> <span id="totalReviews">0</span></p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Select range to analyze:</label>
+                        <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0;">
+                            <span id="startValue">0</span>
+                            <input type="range" id="startRange" min="0" max="100" value="0">
+                            <span>to</span>
+                            <input type="range" id="endRange" min="0" max="100" value="100">
+                            <span id="endValue">100</span>
+                        </div>
+                    </div>
+                    <button id="analyzeRangeBtn" class="btn-primary">🚀 Analyze Selected Range</button>
+                </div>
+            </div>
+            
+            <div id="batchResults"></div>
+        </div>
+        
+        <div class="info-section">
+            <h3>📋 Expected CSV Format</h3>
+            <div class="signal-card">
+                <p><strong>Required columns:</strong></p>
+                <ul>
+                    <li><code>reviewText</code> or <code>Text</code> - The review content</li>
+                    <li><code>UserId</code> or <code>ProfileName</code> - User identifier</li>
+                </ul>
+                <p><strong>Optional columns:</strong></p>
+                <ul>
+                    <li><code>Score</code> or <code>rating</code> - Rating (1-5 stars)</li>
+                    <li><code>Time</code> - Timestamp (Unix format)</li>
+                </ul>
+                <p><small>Example: Amazon review datasets, Yelp datasets, or custom review collections</small></p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Mobile navigation toggle (Copied from index.html)
+        const hamburger = document.querySelector(".hamburger");
+        const navMenu = document.querySelector(".nav-menu");
+
+        hamburger.addEventListener("click", () => {
+            hamburger.classList.toggle("active");
+            navMenu.classList.toggle("active");
+        });
+
+        document.querySelectorAll(".nav-link").forEach(n => n.addEventListener("click", () => {
+            hamburger.classList.remove("active");
+            navMenu.classList.remove("active");
+        }));
+
+        document.getElementById('uploadBtn').onclick = async function() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            if (!file) return alert('Please select a CSV file.');
+            
+            // Show loading message
+            document.getElementById('batchResults').innerHTML = '<p>Reading CSV file...</p>';
+            
+            // First, get file info
+            const formData = new FormData();
+            formData.append('file', file);
+            const infoRes = await fetch('http://127.0.0.1:8000/get_csv_info', {
+                method: 'POST',
+                body: formData
+            });
+            const info = await infoRes.json();
+            
+            // Update range sliders
+            document.getElementById('totalReviews').textContent = info.total_reviews;
+            document.getElementById('startRange').max = info.total_reviews;
+            document.getElementById('endRange').max = info.total_reviews;
+            document.getElementById('endRange').value = Math.min(100, info.total_reviews);
+            document.getElementById('endValue').textContent = Math.min(100, info.total_reviews);
+            
+            // Show range selector
+            document.getElementById('csvInfo').style.display = 'block';
+            document.getElementById('batchResults').innerHTML = '';
+        };
+
+        // Update range display values
+        document.getElementById('startRange').oninput = function() {
+            document.getElementById('startValue').textContent = this.value;
+        };
+        document.getElementById('endRange').oninput = function() {
+            document.getElementById('endValue').textContent = this.value;
+        };
+
+        document.getElementById('analyzeRangeBtn').onclick = async function() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            const start = parseInt(document.getElementById('startRange').value);
+            const end = parseInt(document.getElementById('endRange').value);
+            
+            if (start >= end) {
+                alert('Start must be less than end');
+                return;
+            }
+            
+            // Show loading message
+            document.getElementById('batchResults').innerHTML = '<p>Processing reviews ' + start + ' to ' + end + '... This may take a while.</p>';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('start', start);
+            formData.append('end', end);
+            
+            const res = await fetch('http://127.0.0.1:8000/analyze_reviews_csv', {
+                method: 'POST',
+                body: formData
+            });
+            const results = await res.json();
+            
+            renderAllBatchResults(results);
+        };
+
+        function renderBatchResult(result, idx) {
+            let html = `<div class='result-card fade-in'>`;
+            html += `<h4>Review #${idx + 1}</h4>`;
+            html += `<div><strong>Status:</strong> ${result.is_flagged ? '🚨 FAKE' : '✅ GENUINE'}</div>`;
+            html += `<div><strong>Fraud Score:</strong> ${(result.fraud_score * 100).toFixed(1)}%</div>`;
+            if (result.recommended_action) {
+                let actionColor = 'var(--success-color)';
+                let actionIcon = '✔️';
+                if (result.recommended_action === 'Block and Report') {
+                    actionColor = 'var(--error-color)';
+                    actionIcon = '⛔';
+                } else if (result.recommended_action === 'Flag for Human Review') {
+                    actionColor = 'var(--warning-color)';
+                    actionIcon = '⚠️';
+                }
+                html += `<div class='recommended-action' style='font-weight:bold;color:${actionColor};margin-bottom:0.5rem;'>${actionIcon} Recommended Action: ${result.recommended_action}</div>`;
+            }
+            // Remove chart and extra margin from review card
+            html += `<div><strong>Reasons:</strong> ${result.reason}</div>`;
+            html += `</div>`;
+            return html;
+        }
+
+        function renderBatchSummaryChart(results) {
+            // Calculate mean scores
+            let aiSum = 0, behSum = 0, heuSum = 0, count = 0;
+            let missingAIScore = false, missingBehScore = false, missingHeuScore = false;
+            results.forEach(r => {
+                if (typeof r.ai_score === 'number') aiSum += r.ai_score;
+                else missingAIScore = true;
+                if (typeof r.behavioral_score === 'number') behSum += r.behavioral_score;
+                else missingBehScore = true;
+                if (typeof r.heuristic_score === 'number') heuSum += r.heuristic_score;
+                else missingHeuScore = true;
+                count++;
+            });
+            const aiAvg = count ? aiSum / count : 0;
+            const behAvg = count ? behSum / count : 0;
+            const heuAvg = count ? heuSum / count : 0;
+            // Debug logs
+            console.log('Batch results for chart:', results);
+            const canvas = document.getElementById('batchSummaryChart');
+            console.log('Canvas found:', !!canvas);
+            if (!canvas) {
+                const summaryDiv = document.querySelector('#batchResults h4');
+                if (summaryDiv) summaryDiv.insertAdjacentHTML('afterend', '<div style="color:red;text-align:center;">[Error: Summary chart canvas not found]</div>');
+                return;
+            }
+            if (missingAIScore || missingBehScore || missingHeuScore) {
+                const summaryDiv = document.querySelector('#batchResults h4');
+                if (summaryDiv) summaryDiv.insertAdjacentHTML('afterend', '<div style="color:red;text-align:center;">[Error: Some signal scores missing in results]</div>');
+                console.log('Missing ai_score:', missingAIScore, 'Missing behavioral_score:', missingBehScore, 'Missing heuristic_score:', missingHeuScore);
+                return;
+            }
+            canvas.width = 300;
+            canvas.height = 300;
+            const ctx = canvas.getContext('2d');
+            if (window.batchSummaryChartInstance) {
+                window.batchSummaryChartInstance.destroy();
+            }
+            window.batchSummaryChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['AI Model (avg)', 'Behavioral (avg)', 'Heuristics (avg)'],
+                    datasets: [{
+                        data: [aiAvg * 100, behAvg * 100, heuAvg * 100],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    plugins: {
+                        legend: { display: true, position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let value = context.parsed || 0;
+                                    return `${label}: ${value.toFixed(1)}% (mean)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderAllBatchResults(results) {
+            let html = '';
+            html += `<div style='max-width:340px;margin:1.5rem auto 1rem auto;'>`;
+            html += `<h4 style='text-align:center;'>Batch Summary: Mean Signal Breakdown</h4>`;
+            html += `<canvas id='batchSummaryChart' width='300' height='300'></canvas>`;
+            html += `</div>`;
+            results.forEach((result, idx) => {
+                html += renderBatchResult(result, idx);
+            });
+            document.getElementById('batchResults').innerHTML = html;
+            // Ensure chart is rendered after DOM update
+            setTimeout(() => renderBatchSummaryChart(results), 0);
+        }
+    </script>
+</body>
+</html> 

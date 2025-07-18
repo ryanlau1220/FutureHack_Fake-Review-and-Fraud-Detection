@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Review Detector - About</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar (Copied from index.html) -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🚨</span>
+                <span class="logo-text">Fake Review Detector</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link">🏠 Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/batch" class="nav-link">📊 Batch Analysis</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/accuracy" class="nav-link">🎯 Accuracy Testing</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/fine_tune" class="nav-link">🛠️ Fine-tune & Validate</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/about" class="nav-link active">ℹ️ About</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero-section">
+            <h1>ℹ️ About the System</h1>
+            <p class="hero-subtitle">Advanced AI-powered fake review detection with multi-signal analysis</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="about-section">
+                <h2>🚨 System Overview</h2>
+                <p>This Fake Review & Fraud Detection System combines cutting-edge AI technology with sophisticated behavioral analysis to identify fake reviews in e-commerce platforms. The system achieves over 80% accuracy through a multi-signal approach.</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>🤖 AI Model Analysis</h3>
+                    <p><strong>Technology:</strong> BERT-based transformer model fine-tuned on thousands of fake and real reviews</p>
+                    <p><strong>Weight:</strong> 40-70% of final decision (context-dependent)</p>
+                    <p><strong>Features:</strong> Text semantics, language patterns, sentiment analysis</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>👤 Behavioral Analysis</h3>
+                    <p><strong>Technology:</strong> Pattern recognition and statistical analysis</p>
+                    <p><strong>Weight:</strong> 30-40% of final decision</p>
+                    <p><strong>Features:</strong> Review frequency, timing patterns, rating consistency, account age</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h3>📝 Text Heuristics</h3>
+                    <p><strong>Technology:</strong> Rule-based pattern detection</p>
+                    <p><strong>Weight:</strong> 10-20% of final decision</p>
+                    <p><strong>Features:</strong> Excessive punctuation, repetitive language, suspicious patterns</p>
+                </div>
+            </div>
+            
+            <div class="performance-section">
+                <h2>📊 Performance Metrics</h2>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h4>🎯 Overall Accuracy</h4>
+                        <p class="metric-value">81%</p>
+                        <p>Percentage of correct predictions across all reviews</p>
+                    </div>
+                    <div class="metric-card">
+                        <h4>🎯 Precision</h4>
+                        <p class="metric-value">93%</p>
+                        <p>Low false positive rate - very few real reviews incorrectly flagged</p>
+                    </div>
+                    <div class="metric-card">
+                        <h4>🎯 Recall</h4>
+                        <p class="metric-value">71%</p>
+                        <p>Good fake review detection - catches most fraudulent content</p>
+                    </div>
+                    <div class="metric-card">
+                        <h4>🎯 F1-Score</h4>
+                        <p class="metric-value">81%</p>
+                        <p>Balanced performance measure combining precision and recall</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="technical-section">
+                <h2>🔧 Technical Architecture</h2>
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <h4>Backend</h4>
+                        <ul>
+                            <li><strong>Framework:</strong> FastAPI (Python)</li>
+                            <li><strong>AI Models:</strong> Hugging Face Transformers</li>
+                            <li><strong>Base Model:</strong> BERT-tiny (efficient)</li>
+                            <li><strong>Fine-tuning:</strong> Custom training pipeline</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <h4>Frontend</h4>
+                        <ul>
+                            <li><strong>Framework:</strong> Vanilla HTML/CSS/JavaScript</li>
+                            <li><strong>Design:</strong> Modern, responsive UI</li>
+                            <li><strong>Features:</strong> Real-time analysis, batch processing</li>
+                            <li><strong>Compatibility:</strong> All modern browsers</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <h4>Data Processing</h4>
+                        <ul>
+                            <li><strong>Format:</strong> CSV file support</li>
+                            <li><strong>Columns:</strong> Flexible column mapping</li>
+                            <li><strong>Range Selection:</strong> Customizable batch sizes</li>
+                            <li><strong>Validation:</strong> Robust error handling</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="usage-section">
+                <h2>📖 How to Use</h2>
+                <div class="usage-steps">
+                    <div class="feature-highlight step-card">
+                        <h4>1. Single Review Analysis</h4>
+                        <p>Go to the Home page and enter a review text along with user information. The system will provide a detailed analysis with fraud score and reasoning.</p>
+                    </div>
+                    <div class="feature-highlight step-card">
+                        <h4>2. Batch Processing</h4>
+                        <p>Upload a CSV file with multiple reviews on the Batch Analysis page. Select a range to process and get comprehensive results.</p>
+                    </div>
+                    <div class="feature-highlight step-card">
+                        <h4>3. Accuracy Testing</h4>
+                        <p>Use labeled datasets on the Accuracy Testing page to evaluate system performance with detailed metrics and confusion matrices.</p>
+                    </div>
+                    <div class="feature-highlight step-card">
+                        <h4>4. Fine-tune & Validate</h4>
+                        <p>Improve the accuracy of the fake review detection system by fine-tuning the AI model on your own dataset. Validate the model's performance with robust metrics and real-world data. This feature empowers users to adapt the system for their specific needs and ensures the highest possible detection accuracy.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dataset-section">
+                <h2>📋 Dataset Requirements</h2>
+                <div class="signal-card">
+                    <h4>For Batch Analysis:</h4>
+                    <ul>
+                        <li><code>reviewText</code> or <code>Text</code> - Review content</li>
+                        <li><code>UserId</code> or <code>ProfileName</code> - User identifier</li>
+                        <li><code>Score</code> or <code>rating</code> - Rating (optional)</li>
+                        <li><code>Time</code> - Timestamp (optional)</li>
+                    </ul>
+                    
+                    <h4>For Accuracy Testing:</h4>
+                    <ul>
+                        <li><code>text</code> - Review content</li>
+                        <li><code>label</code> - OR (real) or CG (fake)</li>
+                        <li><code>category</code> - Product category (optional)</li>
+                        <li><code>rating</code> - Rating (optional)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Mobile navigation toggle (Copied from index.html)
+        const hamburger = document.querySelector(".hamburger");
+        const navMenu = document.querySelector(".nav-menu");
+
+        hamburger.addEventListener("click", () => {
+            hamburger.classList.toggle("active");
+            navMenu.classList.toggle("active");
+        });
+
+        document.querySelectorAll(".nav-link").forEach(n => n.addEventListener("click", () => {
+            hamburger.classList.remove("active");
+            navMenu.classList.remove("active");
+        }));
+    </script>
+</body>
+</html> 

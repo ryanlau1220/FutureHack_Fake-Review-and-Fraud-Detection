@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Review Detector - Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🚨</span>
+                <span class="logo-text">Fake Review Detector</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link active">🏠 Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/batch" class="nav-link">📊 Batch Analysis</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/accuracy" class="nav-link">🎯 Accuracy Testing</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/fine_tune" class="nav-link">🛠️ Fine-tune & Validate</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/about" class="nav-link">ℹ️ About</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero-section">
+            <h1>🚨 Fake Review & Fraud Detection System</h1>
+            <p class="hero-subtitle">Advanced AI-powered detection with multi-signal analysis</p>
+        </div>
+        
+        <div id="modelStatus" class="status-card">
+            <strong>Model Status:</strong> <span id="modelType">Loading...</span>
+            <br><small>Fine-tuned models provide better accuracy for your specific dataset.</small>
+        </div>
+        
+        <div class="main-content">
+            <div class="analysis-card">
+                <div style="margin-bottom:1.2em;">
+                    <label for="domainSelect" style="font-weight:600;">Select Domain:</label>
+                    <select id="domainSelect" style="margin-left:0.5em;">
+                        <option value="ecommerce">E-commerce Review</option>
+                        <option value="social">Social Media Post</option>
+                        <option value="news">News Article Headline</option>
+                    </select>
+                </div>
+                <h2>🔍 Single Review Analysis</h2>
+                <p id="domainSubtitle" class="domain-subtitle">Analyze individual <b>e-commerce reviews</b> with our advanced multi-signal detection system.</p>
+                <form id="reviewForm">
+                    <div class="form-group">
+                        <label id="reviewTextLabel">Review Text:</label>
+                        <textarea name="review_text" id="reviewTextArea" rows="4" placeholder="Enter the review text to analyze..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label id="usernameLabel">Username:</label>
+                        <input type="text" name="username" id="usernameInput" placeholder="Enter username..." required>
+                    </div>
+                    <div class="form-group">
+                        <label id="numReviewsLabel">Number of Reviews by User:</label>
+                        <input type="number" name="num_reviews" id="numReviewsInput" min="1" placeholder="Optional: Number of reviews by this user">
+                    </div>
+                    <div class="form-group">
+                        <label id="ratingLabel">Rating (1-5 stars):</label>
+                        <select name="rating" id="ratingSelect">
+                            <option value="">Select rating...</option>
+                            <option value="1">⭐ 1 star</option>
+                            <option value="2">⭐⭐ 2 stars</option>
+                            <option value="3">⭐⭐⭐ 3 stars</option>
+                            <option value="4">⭐⭐⭐⭐ 4 stars</option>
+                            <option value="5">⭐⭐⭐⭐⭐ 5 stars</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">🔍 Analyze Review</button>
+                </form>
+            </div>
+            
+            <div id="result" class="result" style="display:none;"></div>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>🤖 AI Model Analysis</h3>
+                <p>Advanced transformer-based model trained on thousands of fake and real reviews.</p>
+            </div>
+            <div class="feature-card">
+                <h3>👤 Behavioral Analysis</h3>
+                <p>Analyzes user patterns, timing, and review frequency for suspicious behavior.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📝 Text Heuristics</h3>
+                <p>Detects suspicious patterns like excessive exclamation marks and repetitive language.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Mobile navigation toggle
+        const hamburger = document.querySelector(".hamburger");
+        const navMenu = document.querySelector(".nav-menu");
+
+        hamburger.addEventListener("click", () => {
+            hamburger.classList.toggle("active");
+            navMenu.classList.toggle("active");
+        });
+
+        document.querySelectorAll(".nav-link").forEach(n => n.addEventListener("click", () => {
+            hamburger.classList.remove("active");
+            navMenu.classList.remove("active");
+        }));
+
+        // Check model status on page load
+        async function checkModelStatus() {
+            try {
+                const res = await fetch('http://127.0.0.1:8000/test_fake_model');
+                const data = await res.json();
+                document.getElementById('modelType').textContent = 'Fine-tuned model loaded';
+                document.getElementById('modelType').style.color = 'green';
+            } catch (error) {
+                document.getElementById('modelType').textContent = 'Pre-trained model (consider fine-tuning for better accuracy)';
+                document.getElementById('modelType').style.color = 'orange';
+            }
+        }
+        
+        // Check model status when page loads
+        checkModelStatus();
+        
+        document.getElementById('reviewForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                review_text: form.review_text.value,
+                username: form.username.value,
+                num_reviews: form.num_reviews.value ? parseInt(form.num_reviews.value) : null,
+                rating: form.rating.value ? parseInt(form.rating.value) : null,
+                timestamp: new Date().toISOString() // Add current timestamp for behavioral analysis
+            };
+            document.getElementById('result').style.display = 'none';
+            const res = await fetch('http://127.0.0.1:8000/analyze_review', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            
+            // Enhanced result display with multi-signal breakdown
+            let resultHtml = '<div class="result fade-in">';
+            resultHtml += `<h3 style="margin-top: 0; color: var(--text-primary);">🔍 Analysis Results</h3>`;
+            
+            // Overall result with status indicator
+            const flagColor = result.is_flagged ? 'var(--error-color)' : 'var(--success-color)';
+            const flagIcon = result.is_flagged ? '🚨' : '✅';
+            const statusClass = result.is_flagged ? 'status-error' : 'status-success';
+            resultHtml += `<div class="status-indicator ${statusClass}" style="margin-bottom: 1rem;">`;
+            resultHtml += `<strong>${flagIcon} Status:</strong> ${result.is_flagged ? 'FLAGGED AS FAKE' : 'LIKELY GENUINE'}`;
+            resultHtml += '</div>';
+
+            // --- Recommended Action Display ---
+            if (result.recommended_action) {
+                let actionColor = 'var(--success-color)';
+                let actionIcon = '✔️';
+                if (result.recommended_action === 'Block and Report') {
+                    actionColor = 'var(--error-color)';
+                    actionIcon = '⛔';
+                } else if (result.recommended_action === 'Flag for Human Review') {
+                    actionColor = 'var(--warning-color)';
+                    actionIcon = '⚠️';
+                }
+                resultHtml += `<div class="recommended-action" style="font-size:1.2em;font-weight:bold;margin-bottom:1rem;color:${actionColor};">${actionIcon} Recommended Action: ${result.recommended_action}</div>`;
+            }
+            // --- End Recommended Action Display ---
+
+            resultHtml += `<p style="font-size: 1.3em; font-weight: bold; color: var(--primary-color);"><strong>Fraud Score:</strong> ${(result.fraud_score * 100).toFixed(1)}%</p>`;
+
+            // --- Pie Chart for Multi-Signal Breakdown ---
+            resultHtml += '<div style="max-width:320px;margin:1.5rem auto 0 auto;">';
+            resultHtml += '<canvas id="signalBreakdownChart" width="300" height="300"></canvas>';
+            resultHtml += '</div>';
+            // --- End Pie Chart ---
+
+            // Multi-signal breakdown using grid
+            if (result.ai_score !== undefined || result.behavioral_score !== undefined || result.heuristic_score !== undefined) {
+                resultHtml += '<h4 style="color: var(--text-primary); margin-top: 1.5rem;">📊 Signal Breakdown</h4>';
+                resultHtml += '<div class="grid grid-3">';
+                if (result.ai_score !== undefined) {
+                    resultHtml += `<div class="signal-card ai">`;
+                    resultHtml += `<h5 style="margin: 0 0 10px 0; color: var(--info-color);">🤖 AI Model (60%)</h5>`;
+                    resultHtml += `<p style="font-size: 1.1em; font-weight: bold; color: var(--info-color);">${(result.ai_score * 100).toFixed(1)}%</p>`;
+                    resultHtml += '</div>';
+                }
+                if (result.behavioral_score !== undefined) {
+                    resultHtml += `<div class="signal-card behavioral">`;
+                    resultHtml += `<h5 style="margin: 0 0 10px 0; color: var(--warning-color);">👤 Behavioral (30%)</h5>`;
+                    resultHtml += `<p style="font-size: 1.1em; font-weight: bold; color: var(--warning-color);">${(result.behavioral_score * 100).toFixed(1)}%</p>`;
+                    resultHtml += '</div>';
+                }
+                if (result.heuristic_score !== undefined) {
+                    resultHtml += `<div class="signal-card heuristic">`;
+                    resultHtml += `<h5 style="margin: 0 0 10px 0; color: var(--success-color);">📝 Text Rules (10%)</h5>`;
+                    resultHtml += `<p style="font-size: 1.1em; font-weight: bold; color: var(--success-color);">${(result.heuristic_score * 100).toFixed(1)}%</p>`;
+                    resultHtml += '</div>';
+                }
+                resultHtml += '</div>';
+            }
+            // Detailed reasons
+            resultHtml += '<h4 style="color: var(--text-primary); margin-top: 1.5rem;">🔍 Detailed Analysis</h4>';
+            resultHtml += '<div class="signal-card">';
+            resultHtml += `<p style="margin: 0; line-height: 1.6;"><strong>Reasons:</strong> ${result.reason}</p>`;
+            resultHtml += '</div>';
+            resultHtml += '</div>';
+            document.getElementById('result').innerHTML = resultHtml;
+            document.getElementById('result').style.display = 'block';
+
+            // --- Render Pie Chart for Multi-Signal Breakdown ---
+            setTimeout(() => {
+                if (window.signalBreakdownChartInstance) {
+                    window.signalBreakdownChartInstance.destroy();
+                }
+                // Reset canvas size to prevent shrinking
+                const canvas = document.getElementById('signalBreakdownChart');
+                canvas.width = 300;
+                canvas.height = 300;
+                const ctx = canvas.getContext('2d');
+                const data = {
+                    labels: ['AI Model', 'Behavioral', 'Heuristics'],
+                    datasets: [{
+                        data: [
+                            result.ai_score !== undefined ? (result.ai_score * 100) : 0,
+                            result.behavioral_score !== undefined ? (result.behavioral_score * 100) : 0,
+                            result.heuristic_score !== undefined ? (result.heuristic_score * 100) : 0
+                        ],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                };
+                // Parse reasons for tooltips
+                const aiReason = (result.reason.match(/AI: ([^,]+)/) || [])[1] || '';
+                const behavioralReason = (result.reason.match(/Behavior: ([^,]+)/) || [])[1] || '';
+                const heuristicReason = (result.reason.match(/Text: ([^,]+)/) || [])[1] || '';
+                window.signalBreakdownChartInstance = new Chart(ctx, {
+                    type: 'pie',
+                    data: data,
+                    options: {
+                        responsive: false, // <--- CRITICAL FIX
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        let value = context.parsed || 0;
+                                        let reason = '';
+                                        if (context.dataIndex === 0) reason = aiReason ? ` - ${aiReason}` : '';
+                                        if (context.dataIndex === 1) reason = behavioralReason ? ` - ${behavioralReason}` : '';
+                                        if (context.dataIndex === 2) reason = heuristicReason ? ` - ${heuristicReason}` : '';
+                                        return `${label}: ${value.toFixed(1)}%${reason}`;
+                                    }
+                                }
+                            },
+                            legend: {
+                                display: true,
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }, 100);
+            // --- End Pie Chart ---
+        };
+
+        // Domain selector logic
+        const domainSelect = document.getElementById('domainSelect');
+        const reviewTextLabel = document.getElementById('reviewTextLabel');
+        const reviewTextArea = document.getElementById('reviewTextArea');
+        const usernameLabel = document.getElementById('usernameLabel');
+        const usernameInput = document.getElementById('usernameInput');
+        const numReviewsLabel = document.getElementById('numReviewsLabel');
+        const numReviewsInput = document.getElementById('numReviewsInput');
+        const ratingLabel = document.getElementById('ratingLabel');
+        const ratingSelect = document.getElementById('ratingSelect');
+        const domainSubtitle = document.getElementById('domainSubtitle');
+
+        function updateDomainUI(domain) {
+            if (domain === 'ecommerce') {
+                reviewTextLabel.textContent = 'Review Text:';
+                reviewTextArea.placeholder = 'Enter the review text to analyze...';
+                usernameLabel.textContent = 'Username:';
+                usernameInput.placeholder = 'Enter username...';
+                numReviewsLabel.textContent = 'Number of Reviews by User:';
+                numReviewsInput.placeholder = 'Optional: Number of reviews by this user';
+                ratingLabel.textContent = 'Rating (1-5 stars):';
+                ratingSelect.style.display = '';
+                ratingLabel.style.display = '';
+                domainSubtitle.innerHTML = 'Analyze individual <b>e-commerce reviews</b> with our advanced multi-signal detection system.';
+            } else if (domain === 'social') {
+                reviewTextLabel.textContent = 'Post Text:';
+                reviewTextArea.placeholder = 'Enter the social media post to analyze...';
+                usernameLabel.textContent = 'Username:';
+                usernameInput.placeholder = 'Enter username...';
+                numReviewsLabel.textContent = 'Number of Posts by User:';
+                numReviewsInput.placeholder = 'Optional: Number of posts by this user';
+                ratingLabel.style.display = 'none';
+                ratingSelect.style.display = 'none';
+                domainSubtitle.innerHTML = 'Analyze <b>social media posts</b> for suspicious or fake content using multi-signal detection.';
+            } else if (domain === 'news') {
+                reviewTextLabel.textContent = 'Headline Text:';
+                reviewTextArea.placeholder = 'Enter the news article headline to analyze...';
+                usernameLabel.textContent = 'Source:';
+                usernameInput.placeholder = 'Enter news source...';
+                numReviewsLabel.textContent = 'Number of Articles by Source:';
+                numReviewsInput.placeholder = 'Optional: Number of articles by this source';
+                ratingLabel.style.display = 'none';
+                ratingSelect.style.display = 'none';
+                domainSubtitle.innerHTML = 'Analyze <b>news article headlines</b> for sensationalism or fake news signals.';
+            }
+        }
+        domainSelect.addEventListener('change', function() {
+            updateDomainUI(this.value);
+        });
+        // Initialize UI
+        updateDomainUI(domainSelect.value);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Review Detector - Accuracy Testing</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar (Copied from index.html) -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🚨</span>
+                <span class="logo-text">Fake Review Detector</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link">🏠 Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/batch" class="nav-link">📊 Batch Analysis</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/accuracy" class="nav-link active">🎯 Accuracy Testing</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/fine_tune" class="nav-link">🛠️ Fine-tune & Validate</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/about" class="nav-link">ℹ️ About</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero-section">
+            <h1>🎯 Model Accuracy Testing</h1>
+            <p class="hero-subtitle">Evaluate system performance with labeled datasets and comprehensive metrics</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="analysis-card">
+                <h2>🧪 Test Model Accuracy</h2>
+                <p>Upload a CSV file with labeled fake/real reviews to test the system's accuracy and performance metrics.</p>
+                
+                <div class="signal-card">
+                    <h4>📋 Instructions</h4>
+                    <p>Upload a CSV file with labeled fake/real reviews to test system accuracy.</p>
+                    <p><strong>Expected columns:</strong> category, rating, label (OR/CG), text</p>
+                    <p><small>OR = Original/Real reviews, CG = Computer-generated/Fake reviews</small></p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Upload Labeled CSV File:</label>
+                    <input type="file" id="labeledCsvFile" accept=".csv">
+                </div>
+                <button id="testAccuracyBtn" class="btn-success">🧪 Test Accuracy</button>
+                
+                <div id="labeledCsvInfo" style="display:none;" class="fade-in">
+                    <div class="signal-card">
+                        <h4>📈 Dataset Information</h4>
+                        <p><strong>Total reviews in file:</strong> <span id="labeledTotalReviews">0</span></p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Select range to test:</label>
+                        <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0;">
+                            <span id="labeledStartValue">0</span>
+                            <input type="range" id="labeledStartRange" min="0" max="100" value="0">
+                            <span>to</span>
+                            <input type="range" id="labeledEndRange" min="0" max="100" value="100">
+                            <span id="labeledEndValue">100</span>
+                        </div>
+                    </div>
+                    <button id="testAccuracyRangeBtn" class="btn-success">🎯 Test Accuracy for Selected Range</button>
+                </div>
+            </div>
+            
+            <div id="accuracyResults"></div>
+        </div>
+        
+        <div class="info-section">
+            <h3>📊 Understanding the Metrics</h3>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h4>🎯 Accuracy</h4>
+                    <p>Percentage of correct predictions (both fake and real reviews correctly identified)</p>
+                </div>
+                <div class="metric-card">
+                    <h4>🎯 Precision</h4>
+                    <p>Percentage of flagged reviews that are actually fake (low false positives)</p>
+                </div>
+                <div class="metric-card">
+                    <h4>🎯 Recall</h4>
+                    <p>Percentage of actual fake reviews that were correctly identified (low false negatives)</p>
+                </div>
+                <div class="metric-card">
+                    <h4>🎯 F1-Score</h4>
+                    <p>Harmonic mean of precision and recall (balanced performance measure)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Mobile navigation toggle (Copied from index.html)
+        const hamburger = document.querySelector(".hamburger");
+        const navMenu = document.querySelector(".nav-menu");
+
+        hamburger.addEventListener("click", () => {
+            hamburger.classList.toggle("active");
+            navMenu.classList.toggle("active");
+        });
+
+        document.querySelectorAll(".nav-link").forEach(n => n.addEventListener("click", () => {
+            hamburger.classList.remove("active");
+            navMenu.classList.remove("active");
+        }));
+
+        document.getElementById('testAccuracyBtn').onclick = async function() {
+            const fileInput = document.getElementById('labeledCsvFile');
+            const file = fileInput.files[0];
+            if (!file) return alert('Please select a labeled CSV file.');
+            
+            // Show loading message
+            document.getElementById('labeledCsvInfo').style.display = 'block'; // Show range selector
+            document.getElementById('accuracyResults').innerHTML = '<p>Testing accuracy with labeled data... This may take a while.</p>';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const res = await fetch('http://127.0.0.1:8000/get_csv_info', { // Changed endpoint to get_csv_info
+                method: 'POST',
+                body: formData
+            });
+            const info = await res.json();
+            
+            // Update range sliders
+            document.getElementById('labeledTotalReviews').textContent = info.total_reviews;
+            document.getElementById('labeledStartRange').max = info.total_reviews;
+            document.getElementById('labeledEndRange').max = info.total_reviews;
+            document.getElementById('labeledEndRange').value = Math.min(100, info.total_reviews);
+            document.getElementById('labeledEndValue').textContent = Math.min(100, info.total_reviews);
+
+            // Show range selector
+            document.getElementById('labeledCsvInfo').style.display = 'block';
+            document.getElementById('accuracyResults').innerHTML = '';
+        };
+
+        // Update labeled CSV range display values
+        document.getElementById('labeledStartRange').oninput = function() {
+            document.getElementById('labeledStartValue').textContent = this.value;
+        };
+        document.getElementById('labeledEndRange').oninput = function() {
+            document.getElementById('labeledEndValue').textContent = this.value;
+        };
+
+        document.getElementById('testAccuracyRangeBtn').onclick = async function() {
+            const fileInput = document.getElementById('labeledCsvFile');
+            const file = fileInput.files[0];
+            const start = parseInt(document.getElementById('labeledStartRange').value);
+            const end = parseInt(document.getElementById('labeledEndRange').value);
+            
+            if (start >= end) {
+                alert('Start must be less than end');
+                return;
+            }
+            
+            // Show loading message
+            document.getElementById('accuracyResults').innerHTML = '<p>Processing reviews ' + start + ' to ' + end + '... This may take a while.</p>';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('start', start);
+            formData.append('end', end);
+            
+            const res = await fetch('http://127.0.0.1:8000/analyze_labeled_csv', {
+                method: 'POST',
+                body: formData
+            });
+            const accuracyResult = await res.json();
+            
+            // Display comprehensive accuracy metrics
+            let html = '<div class="fade-in">';
+            html += '<h3>📊 MODEL EVALUATION REPORT</h3>';
+            html += '<div class="signal-card ai">';
+            html += '<h4 style="margin-top: 0; color: var(--info-color);">📊 Performance Metrics</h4>';
+            html += '<p><strong>Total Reviews:</strong> ' + accuracyResult.total_reviews + '</p>';
+            html += '<p><strong>Correct Predictions:</strong> ' + accuracyResult.correct_predictions + '</p>';
+            html += '<p><strong>Accuracy:</strong> <span style="font-size: 1.2em; font-weight: bold; color: var(--info-color);">' + (accuracyResult.accuracy * 100).toFixed(1) + '%</span></p>';
+            html += '<p><strong>Precision:</strong> <span style="color: var(--success-color);">' + (accuracyResult.precision * 100).toFixed(1) + '%</span></p>';
+            html += '<p><strong>Recall:</strong> <span style="color: var(--warning-color);">' + (accuracyResult.recall * 100).toFixed(1) + '%</span></p>';
+            html += '<p><strong>F1-Score:</strong> <span style="color: var(--secondary-color);">' + (accuracyResult.f1_score * 100).toFixed(1) + '%</span></p>';
+            html += '</div>';
+            
+            // Confusion Matrix with styling
+            html += '<h4>🎯 Confusion Matrix</h4>';
+            html += '<div class="signal-card">';
+            html += '<table>';
+            html += '<tr><th></th><th>Predicted REAL</th><th>Predicted FAKE</th></tr>';
+            html += '<tr><td><strong>Actually REAL</strong></td><td style="background: rgba(76, 175, 80, 0.1);">' + accuracyResult.confusion_matrix.true_negatives + '</td><td style="background: rgba(244, 67, 54, 0.1);">' + accuracyResult.confusion_matrix.false_positives + '</td></tr>';
+            html += '<tr><td><strong>Actually FAKE</strong></td><td style="background: rgba(244, 67, 54, 0.1);">' + accuracyResult.confusion_matrix.false_negatives + '</td><td style="background: rgba(76, 175, 80, 0.1);">' + accuracyResult.confusion_matrix.true_positives + '</td></tr>';
+            html += '</table>';
+            html += '</div>';
+            
+            // Confidence Analysis (if available)
+            if (accuracyResult.detailed_results.length > 0) {
+                const fakeReviews = accuracyResult.detailed_results.filter(r => r.actual_label === 'FAKE');
+                const realReviews = accuracyResult.detailed_results.filter(r => r.actual_label === 'REAL');
+                
+                const avgFakeConfidence = fakeReviews.length > 0 ? 
+                    (fakeReviews.reduce((sum, r) => sum + (r.fraud_score || 0), 0) / fakeReviews.length).toFixed(3) : 'N/A';
+                const avgRealConfidence = realReviews.length > 0 ? 
+                    (realReviews.reduce((sum, r) => sum + (r.fraud_score || 0), 0) / realReviews.length).toFixed(3) : 'N/A';
+                
+                html += '<h4>📈 Confidence Analysis</h4>';
+                html += '<div class="signal-card behavioral">';
+                html += '<p><strong>Average confidence for FAKE reviews:</strong> ' + avgFakeConfidence + '</p>';
+                html += '<p><strong>Average confidence for REAL reviews:</strong> ' + avgRealConfidence + '</p>';
+                html += '</div>';
+            }
+            
+            // Sample Predictions - Correct and Incorrect
+            html += '<h4>✅ CORRECT PREDICTIONS</h4>';
+            const correctPredictions = accuracyResult.detailed_results.filter(r => r.is_correct).slice(0, 5);
+            if (correctPredictions.length > 0) {
+                html += '<div class="signal-card heuristic">';
+                for (let i = 0; i < correctPredictions.length; i++) {
+                    const result = correctPredictions[i];
+                    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 3px; border-left: 3px solid var(--success-color);">';
+                    html += '<p><strong>Text:</strong> ' + result.review_text + '</p>';
+                    html += '<p><strong>Actual:</strong> ' + result.actual_label + ', <strong>Predicted:</strong> ' + result.predicted_label + ' (conf: ' + result.fraud_score.toFixed(3) + ')</p>';
+                    html += '<hr style="border: none; border-top: 1px solid #ddd;">';
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            
+            html += '<h4>❌ INCORRECT PREDICTIONS</h4>';
+            const incorrectPredictions = accuracyResult.detailed_results.filter(r => !r.is_correct).slice(0, 5);
+            if (incorrectPredictions.length > 0) {
+                html += '<div class="signal-card" style="border-left: 4px solid var(--error-color);">';
+                for (let i = 0; i < incorrectPredictions.length; i++) {
+                    const result = incorrectPredictions[i];
+                    html += '<div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 3px; border-left: 3px solid var(--error-color);">';
+                    html += '<p><strong>Text:</strong> ' + result.review_text + '</p>';
+                    html += '<p><strong>Actual:</strong> ' + result.actual_label + ', <strong>Predicted:</strong> ' + result.predicted_label + ' (conf: ' + result.fraud_score.toFixed(3) + ')</p>';
+                    html += '<hr style="border: none; border-top: 1px solid #ddd;">';
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+            
+            // Detailed Results Table (expandable)
+            html += '<h4>📋 Detailed Results (All Reviews)</h4>';
+            html += '<button onclick="toggleDetailedTable()" class="btn-secondary" style="margin-bottom: 10px;">📊 Show/Hide Detailed Table</button>';
+            html += '<div id="detailedTable" style="display: none;" class="fade-in">';
+            html += '<div class="signal-card">';
+            html += '<table>';
+            html += '<tr><th>#</th><th>Review Text</th><th>Actual</th><th>Predicted</th><th>Fraud Score</th><th>Correct?</th><th>Reason</th></tr>';
+            for (let i = 0; i < accuracyResult.detailed_results.length; i++) {
+                const result = accuracyResult.detailed_results[i];
+                const correctClass = result.is_correct ? 'background: rgba(76, 175, 80, 0.1);' : 'background: rgba(244, 67, 54, 0.1);';
+                const correctIcon = result.is_correct ? '✓' : '✗';
+                const correctColor = result.is_correct ? 'color: var(--success-color);' : 'color: var(--error-color);';
+                html += '<tr style="' + correctClass + '">';
+                html += '<td>' + result.review_number + '</td>';
+                html += '<td style="max-width: 300px; word-wrap: break-word;">' + result.review_text + '</td>';
+                html += '<td>' + result.actual_label + '</td>';
+                html += '<td>' + result.predicted_label + '</td>';
+                html += '<td>' + result.fraud_score.toFixed(3) + '</td>';
+                html += '<td style="' + correctColor + ' font-weight: bold;">' + correctIcon + '</td>';
+                html += '<td style="max-width: 200px; word-wrap: break-word;">' + (result.reason || 'N/A') + '</td>';
+                html += '</tr>';
+            }
+            html += '</table>';
+            html += '</div>';
+            html += '</div>';
+            
+            html += '</div>'; // Close fade-in div
+            
+            document.getElementById('accuracyResults').innerHTML = html;
+        };
+        
+        // Global function for toggling detailed table
+        function toggleDetailedTable() {
+            const table = document.getElementById("detailedTable");
+            table.style.display = table.style.display === "none" ? "block" : "none";
+        }
+
+        function renderAccuracyResult(result, idx) {
+            let html = `<div class='result-card fade-in'>`;
+            html += `<h4>Review #${idx + 1}</h4>`;
+            html += `<div><strong>Status:</strong> ${result.is_flagged ? '🚨 FAKE' : '✅ GENUINE'}</div>`;
+            html += `<div><strong>Fraud Score:</strong> ${(result.fraud_score * 100).toFixed(1)}%</div>`;
+            if (result.recommended_action) {
+                let actionColor = 'var(--success-color)';
+                let actionIcon = '✔️';
+                if (result.recommended_action === 'Block and Report') {
+                    actionColor = 'var(--error-color)';
+                    actionIcon = '⛔';
+                } else if (result.recommended_action === 'Flag for Human Review') {
+                    actionColor = 'var(--warning-color)';
+                    actionIcon = '⚠️';
+                }
+                html += `<div class='recommended-action' style='font-weight:bold;color:${actionColor};margin-bottom:0.5rem;'>${actionIcon} Recommended Action: ${result.recommended_action}</div>`;
+            }
+            html += `<div style='max-width:320px;margin:1rem auto;'><canvas id='signalBreakdownChart${idx}' width='300' height='300'></canvas></div>`;
+            html += `<div><strong>Reasons:</strong> ${result.reason}</div>`;
+            html += `</div>`;
+            return html;
+        }
+
+        function renderAccuracySummaryChart(results) {
+            // Calculate mean scores
+            let aiSum = 0, behSum = 0, heuSum = 0, count = 0;
+            results.forEach(r => {
+                if (typeof r.ai_score === 'number') aiSum += r.ai_score;
+                if (typeof r.behavioral_score === 'number') behSum += r.behavioral_score;
+                if (typeof r.heuristic_score === 'number') heuSum += r.heuristic_score;
+                count++;
+            });
+            const aiAvg = count ? aiSum / count : 0;
+            const behAvg = count ? behSum / count : 0;
+            const heuAvg = count ? heuSum / count : 0;
+            // Render chart
+            setTimeout(() => {
+                const canvas = document.getElementById('accuracySummaryChart');
+                if (!canvas) return;
+                canvas.width = 300;
+                canvas.height = 300;
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['AI Model (avg)', 'Behavioral (avg)', 'Heuristics (avg)'],
+                        datasets: [{
+                            data: [aiAvg * 100, behAvg * 100, heuAvg * 100],
+                            backgroundColor: [
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(255, 206, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        plugins: {
+                            legend: { display: true, position: 'bottom' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        let value = context.parsed || 0;
+                                        return `${label}: ${value.toFixed(1)}% (mean)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }, 100);
+        }
+
+        function renderAllAccuracyResults(results) {
+            let html = '';
+            html += `<div style='max-width:340px;margin:1.5rem auto 1rem auto;'>`;
+            html += `<h4 style='text-align:center;'>Accuracy Test Summary: Mean Signal Breakdown</h4>`;
+            html += `<canvas id='accuracySummaryChart' width='300' height='300'></canvas>`;
+            html += `</div>`;
+            results.forEach((result, idx) => {
+                html += renderAccuracyResult(result, idx);
+            });
+            document.getElementById('accuracyResults').innerHTML = html;
+            renderAccuracySummaryChart(results);
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Review Detector - Fine-tune & Validate</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar (Copied from index.html) -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🚨</span>
+                <span class="logo-text">Fake Review Detector</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/" class="nav-link">🏠 Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/batch" class="nav-link">📊 Batch Analysis</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/accuracy" class="nav-link">🎯 Accuracy Testing</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/fine_tune" class="nav-link active">🛠️ Fine-tune & Validate</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/about" class="nav-link">ℹ️ About</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <h1 style="margin-top:2rem;">🛠️ Fine-tuning & Validation</h1>
+        <div class="features-grid">
+            <div class="feature-card" style="flex:2;">
+                <h2>🤖 Fine-tune Model</h2>
+                <form id="fineTuneForm">
+                    <div class="form-group">
+                        <label>Upload Labeled CSV Dataset:</label>
+                        <input type="file" id="fineTuneFile" accept=".csv" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Range to Use:</label>
+                        <input type="number" id="fineTuneStart" min="0" value="0" style="width:130px;font-size:1.1em;"> to
+                        <input type="number" id="fineTuneEnd" min="1" value="100" style="width:130px;font-size:1.1em;">
+                    </div>
+                    <button type="submit" class="btn-primary">🚀 Start Fine-tuning</button>
+                </form>
+                <div id="fineTuneStatus" class="status-card" style="margin-top:1em;"></div>
+                <div id="fineTuneProgress" class="progress-bar" style="display:none;margin-top:1em;"><div class="progress"></div></div>
+                <div id="fineTuneResults" class="result" style="margin-top:1em;"></div>
+            </div>
+            <div class="feature-card" style="flex:2;">
+                <h2>✅ Validate Model</h2>
+                <form id="validateForm">
+                    <div class="form-group">
+                        <label>Upload Labeled CSV Dataset:</label>
+                        <input type="file" id="validateFile" accept=".csv" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Range to Use:</label>
+                        <input type="number" id="validateStart" min="0" value="0" style="width:130px;font-size:1.1em;"> to
+                        <input type="number" id="validateEnd" min="1" value="100" style="width:130px;font-size:1.1em;">
+                    </div>
+                    <button type="submit" class="btn-primary">📊 Start Validation</button>
+                </form>
+                <div id="validateStatus" class="status-card" style="margin-top:1em;"></div>
+                <div id="validateProgress" class="progress-bar" style="display:none;margin-top:1em;"><div class="progress"></div></div>
+                <div id="validateResults" class="result" style="margin-top:1em;"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Mobile navigation toggle (Copied from index.html)
+        const hamburger = document.querySelector(".hamburger");
+        const navMenu = document.querySelector(".nav-menu");
+
+        hamburger.addEventListener("click", () => {
+            hamburger.classList.toggle("active");
+            navMenu.classList.toggle("active");
+        });
+
+        document.querySelectorAll(".nav-link").forEach(n => n.addEventListener("click", () => {
+            hamburger.classList.remove("active");
+            navMenu.classList.remove("active");
+        }));
+
+        // Add spinner CSS
+        const spinnerStyle = document.createElement('style');
+        spinnerStyle.innerHTML = `
+        .spinner { display:inline-block; width:32px; height:32px; border:4px solid #eee; border-top:4px solid #3498db; border-radius:50%; animation:spin 1s linear infinite; vertical-align:middle; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .status-icon { font-size:2em; vertical-align:middle; }
+        `;
+        document.head.appendChild(spinnerStyle);
+
+        // Fine-tuning
+        document.getElementById('fineTuneForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('fineTuneFile');
+            const start = parseInt(document.getElementById('fineTuneStart').value) || 0;
+            const end = parseInt(document.getElementById('fineTuneEnd').value) || 100;
+            const statusDiv = document.getElementById('fineTuneStatus');
+            const resultsDiv = document.getElementById('fineTuneResults');
+            statusDiv.innerHTML = '<span class="spinner"></span> Processing...';
+            resultsDiv.innerHTML = '';
+            if (!fileInput.files.length) {
+                statusDiv.innerHTML = '<span class="status-icon" style="color:#e74c3c;">❌</span> Please select a CSV file.';
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('start', start);
+            formData.append('end', end);
+            try {
+                const res = await fetch('http://127.0.0.1:8000/analyze_labeled_csv', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!res.ok) throw new Error('Server error');
+                const data = await res.json();
+                statusDiv.innerHTML = '<span class="status-icon" style="color:#27ae60;">✔️</span> Done!';
+                resultsDiv.innerHTML = renderFineTuneResults(data);
+            } catch (err) {
+                statusDiv.innerHTML = '<span class="status-icon" style="color:#e74c3c;">❌</span> Error during fine-tuning: ' + err.message;
+            }
+        };
+
+        // Validation
+        document.getElementById('validateForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('validateFile');
+            const start = parseInt(document.getElementById('validateStart').value) || 0;
+            const end = parseInt(document.getElementById('validateEnd').value) || 100;
+            const statusDiv = document.getElementById('validateStatus');
+            const resultsDiv = document.getElementById('validateResults');
+            statusDiv.innerHTML = '<span class="spinner"></span> Processing...';
+            resultsDiv.innerHTML = '';
+            if (!fileInput.files.length) {
+                statusDiv.innerHTML = '<span class="status-icon" style="color:#e74c3c;">❌</span> Please select a CSV file.';
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('start', start);
+            formData.append('end', end);
+            try {
+                const res = await fetch('http://127.0.0.1:8000/analyze_labeled_csv', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!res.ok) throw new Error('Server error');
+                const data = await res.json();
+                statusDiv.innerHTML = '<span class="status-icon" style="color:#27ae60;">✔️</span> Done!';
+                resultsDiv.innerHTML = renderValidationResults(data);
+            } catch (err) {
+                statusDiv.innerHTML = '<span class="status-icon" style="color:#e74c3c;">❌</span> Error during validation: ' + err.message;
+            }
+        };
+        // Renderers for results
+        function renderFineTuneResults(data) {
+            if (data.error) return `<div class='status-card status-error'>${data.error}</div>`;
+            let html = `<div class='status-card status-success'>Fine-tuning completed successfully!</div>`;
+            if (data.detailed_results && data.detailed_results.length) {
+                html += `<details style='margin-top:2em;'><summary>Show Sample Predictions</summary><div class='table-wrapper'><table class='results-table'><tr><th>#</th><th>Text</th><th>Actual</th><th>Predicted</th><th>Fraud Score</th><th>Reason</th></tr>`;
+                data.detailed_results.slice(0, 10).forEach((r, i) => {
+                    html += `<tr><td>${i+1}</td><td>${r.review_text}</td><td>${r.actual_label}</td><td>${r.predicted_label}</td><td>${(r.fraud_score*100).toFixed(1)}%</td><td>${r.reason}</td></tr>`;
+                });
+                html += `</table></div><button type='button' class='btn-secondary' style='margin-top:1em;' onclick='window.showAllFineTuneResults()'>View All Records</button></details>`;
+                // Attach the full table data to window for popup
+                window.allFineTuneResults = data.detailed_results;
+            }
+            return html;
+        }
+        function renderValidationResults(data) {
+            if (data.error) return `<div class='status-card status-error'>${data.error}</div>`;
+            let html = `<div class='status-card status-success'>Validation completed successfully!</div>`;
+            html += `<div class='metrics-grid' style='margin-top:1em;'>`;
+            html += `<div class='metric-card'><strong>Accuracy</strong><br>${(data.accuracy*100).toFixed(1)}%</div>`;
+            html += `<div class='metric-card'><strong>Precision</strong><br>${(data.precision*100).toFixed(1)}%</div>`;
+            html += `<div class='metric-card'><strong>Recall</strong><br>${(data.recall*100).toFixed(1)}%</div>`;
+            html += `<div class='metric-card'><strong>F1 Score</strong><br>${(data.f1_score*100).toFixed(1)}%</div>`;
+            html += `</div>`;
+            if (data.confusion_matrix) {
+                html += `<div style='margin-top:1em;'><strong>Confusion Matrix</strong><br><div class='table-wrapper'><table class='results-table'><tr><th></th><th>Predicted Real</th><th>Predicted Fake</th></tr>`;
+                html += `<tr><th>Actual Real</th><td>${data.confusion_matrix.true_negatives}</td><td>${data.confusion_matrix.false_positives}</td></tr>`;
+                html += `<tr><th>Actual Fake</th><td>${data.confusion_matrix.false_negatives}</td><td>${data.confusion_matrix.true_positives}</td></tr>`;
+                html += `</table></div></div>`;
+            }
+            if (data.detailed_results && data.detailed_results.length) {
+                html += `<details style='margin-top:2em;'><summary>Show Sample Predictions</summary><div class='table-wrapper'><table class='results-table'><tr><th>#</th><th>Text</th><th>Actual</th><th>Predicted</th><th>Fraud Score</th><th>Reason</th></tr>`;
+                data.detailed_results.slice(0, 10).forEach((r, i) => {
+                    html += `<tr><td>${i+1}</td><td>${r.review_text}</td><td>${r.actual_label}</td><td>${r.predicted_label}</td><td>${(r.fraud_score*100).toFixed(1)}%</td><td>${r.reason}</td></tr>`;
+                });
+                html += `</table></div><button type='button' class='btn-secondary' style='margin-top:1em;' onclick='window.showAllValidationResults()'>View All Records</button></details>`;
+                window.allValidationResults = data.detailed_results;
+            }
+            return html;
+        }
+        // Add popup functions for full results
+        window.showAllFineTuneResults = function() {
+            if (!window.allFineTuneResults) return;
+            const win = window.open('', '_blank');
+            win.document.write(`<html><head><title>All Fine-tune Results</title><style>
+            body { font-family: Inter, Arial, sans-serif; background:#fafbfc; color:#222; }
+            .table-wrapper { margin-top:1em; overflow-x:auto; }
+            .results-table { max-width:100%; min-width:700px; border-collapse:collapse; }
+            .results-table th, .results-table td { padding:0.5em 1em; border:1px solid #ddd; }
+            </style></head><body><h2>All Fine-tune Results</h2><div class='table-wrapper'><table class='results-table'><tr><th>#</th><th>Text</th><th>Actual</th><th>Predicted</th><th>Fraud Score</th><th>Reason</th></tr>`);
+            window.allFineTuneResults.forEach((r, i) => {
+                win.document.write(`<tr><td>${i+1}</td><td>${r.review_text}</td><td>${r.actual_label}</td><td>${r.predicted_label}</td><td>${(r.fraud_score*100).toFixed(1)}%</td><td>${r.reason}</td></tr>`);
+            });
+            win.document.write(`</table></div></body></html>`);
+            win.document.close();
+        }
+        window.showAllValidationResults = function() {
+            if (!window.allValidationResults) return;
+            const win = window.open('', '_blank');
+            win.document.write(`<html><head><title>All Validation Results</title><style>
+            body { font-family: Inter, Arial, sans-serif; background:#fafbfc; color:#222; }
+            .table-wrapper { margin-top:1em; overflow-x:auto; }
+            .results-table { max-width:100%; min-width:700px; border-collapse:collapse; }
+            .results-table th, .results-table td { padding:0.5em 1em; border:1px solid #ddd; }
+            </style></head><body><h2>All Validation Results</h2><div class='table-wrapper'><table class='results-table'><tr><th>#</th><th>Text</th><th>Actual</th><th>Predicted</th><th>Fraud Score</th><th>Reason</th></tr>`);
+            window.allValidationResults.forEach((r, i) => {
+                win.document.write(`<tr><td>${i+1}</td><td>${r.review_text}</td><td>${r.actual_label}</td><td>${r.predicted_label}</td><td>${(r.fraud_score*100).toFixed(1)}%</td><td>${r.reason}</td></tr>`);
+            });
+            win.document.write(`</table></div></body></html>`);
+            win.document.close();
+        }
+    </script>
+    <style>
+        .table-wrapper { margin-top:1em; overflow-x:auto; }
+        .results-table { max-width:100%; min-width:700px; border-collapse:collapse; }
+        .results-table th, .results-table td { padding:0.5em 1em; border:1px solid #ddd; }
+    </style>
+</body>
+</html> 

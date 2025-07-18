@@ -1,0 +1,22 @@
+# Core FastAPI dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# ML and AI dependencies
+torch>=2.0.0
+transformers>=4.30.0
+scikit-learn>=1.3.0
+pandas>=2.0.0
+numpy==1.24.3
+
+# Fine-tuning dependencies
+datasets==2.14.6
+accelerate==0.24.1
+
+# Visualization dependencies
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# Additional utilities
+tqdm==4.66.1 
