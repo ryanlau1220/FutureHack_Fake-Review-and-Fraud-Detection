@@ -67,7 +67,7 @@ flowchart TD
     %% Multi-Signal Analysis
     COMBINER[⚖️ Multi-Signal Combiner
     *Weighted scoring system*
-    <u>AI Model (60%) + Behavioral (30%) + Heuristics (10%)</u>
+    <u>AI Model 60% + Behavioral 30% + Heuristics 10%</u>
     **Dynamic threshold adjustment**] --> RESULTS
 
     %% Output Layer
