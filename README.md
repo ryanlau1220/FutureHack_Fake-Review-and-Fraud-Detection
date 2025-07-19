@@ -16,6 +16,178 @@ A comprehensive AI-powered system for detecting fake reviews and fraud in e-comm
 - **📝 Advanced Heuristics**: Text complexity, repetition detection, and suspicious patterns
 - **🔧 Automated Setup**: One-click installation and setup via script runner
 
+## 🏗️ System Architecture
+
+```mermaid
+---
+config:
+  layout: dagre
+---
+flowchart TD
+
+    %% User Interface Layer
+    UI[🌐 Frontend Interface
+    *HTML5, CSS3, JavaScript*
+    <u>Multi-page responsive web app</u>
+    **Single Review, Batch Analysis, Accuracy Testing, Fine-tuning**] --> API
+
+    %% API Gateway Layer
+    API[🚀 FastAPI Backend Server
+    *RESTful API Gateway*
+    <u>Request routing & validation</u>
+    **CORS, Static file serving, JSON responses**] --> ML_ENGINE
+
+    %% Core Processing Layer
+    ML_ENGINE[🤖 ML Engine
+    *Fine-tuning & Model Management*
+    <u>BERT model training & validation</u>
+    **Hugging Face Transformers, PyTorch**] --> BEHAVIORAL
+
+    BEHAVIORAL[👤 Behavioral Analyzer
+    *User pattern detection*
+    <u>Review frequency, timing, rating patterns</u>
+    **Custom Python module**] --> HEURISTICS
+
+    HEURISTICS[📝 Text Heuristics
+    *Suspicious pattern detection*
+    <u>Excessive punctuation, repetition, complexity</u>
+    **Regex patterns & NLP analysis**] --> COMBINER
+
+    %% Data Sources
+    DATASET[📊 Training Dataset
+    *CSV files with labeled reviews*
+    <u>OR=Real, CG=Fake labels</u>
+    **Kaggle datasets, custom data**] --> ML_ENGINE
+
+    MODEL_STORE[💾 Model Storage
+    *Fine-tuned BERT models*
+    <u>config.json, model.safetensors, tokenizer</u>
+    **Local file system**] --> ML_ENGINE
+
+    %% Multi-Signal Analysis
+    COMBINER[⚖️ Multi-Signal Combiner
+    *Weighted scoring system*
+    <u>AI Model (60%) + Behavioral (30%) + Heuristics (10%)</u>
+    **Dynamic threshold adjustment**] --> RESULTS
+
+    %% Output Layer
+    RESULTS[📈 Analysis Results
+    *Comprehensive fraud detection*
+    <u>Fraud score, confidence, recommendations</u>
+    **JSON response with detailed breakdown**] --> UI
+
+    %% External Services
+    SENTIMENT[😊 Sentiment Analysis
+    *DistilBERT pipeline*
+    <u>Emotional content analysis</u>
+    **Hugging Face Transformers**] --> COMBINER
+
+    %% Script Runner
+    SCRIPT[🔧 Script Runner
+    *Automated setup & operations*
+    <u>One-click installation & deployment</u>
+    **Python automation**] --> API
+
+    %% Styling
+    classDef frontend fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef backend fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef ml fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef data fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef output fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+
+    class UI,SCRIPT frontend
+    class API backend
+    class ML_ENGINE,BEHAVIORAL,HEURISTICS,SENTIMENT ml
+    class DATASET,MODEL_STORE data
+    class RESULTS,COMBINER output
+```
+
+### 🔄 Data Flow Architecture
+
+```mermaid
+---
+config:
+  layout: dagre
+---
+flowchart LR
+
+    %% Input Sources
+    subgraph INPUTS["📥 Input Sources"]
+        SINGLE[Single Review Input]
+        BATCH[Batch CSV Upload]
+        LABELED[Labeled Dataset]
+    end
+
+    %% Processing Pipeline
+    subgraph PROCESSING["⚙️ Processing Pipeline"]
+        VALIDATE[Data Validation]
+        TOKENIZE[Text Tokenization]
+        AI_MODEL[AI Model Analysis]
+        BEHAVIOR[Behavioral Analysis]
+        HEURISTIC[Heuristic Analysis]
+    end
+
+    %% Model Layer
+    subgraph MODELS["🤖 AI Models"]
+        BERT[BERT-tiny Base Model]
+        FINE_TUNED[Fine-tuned BERT]
+        SENTIMENT[DistilBERT Sentiment]
+    end
+
+    %% Analysis Components
+    subgraph ANALYSIS["🔍 Analysis Components"]
+        TEXT_ANALYSIS[Text Pattern Analysis]
+        USER_BEHAVIOR[User Behavior Patterns]
+        TIMING[Timing Analysis]
+        RATING[Rating Pattern Analysis]
+    end
+
+    %% Output Generation
+    subgraph OUTPUTS["📤 Output Generation"]
+        SCORE[Fraud Score Calculation]
+        BREAKDOWN[Multi-Signal Breakdown]
+        RECOMMENDATION[Action Recommendations]
+        METRICS[Performance Metrics]
+    end
+
+    %% Data Flow
+    INPUTS --> VALIDATE
+    VALIDATE --> TOKENIZE
+    TOKENIZE --> AI_MODEL
+    AI_MODEL --> BEHAVIOR
+    BEHAVIOR --> HEURISTIC
+    HEURISTIC --> SCORE
+
+    %% Model Integration
+    BERT --> AI_MODEL
+    FINE_TUNED --> AI_MODEL
+    SENTIMENT --> TEXT_ANALYSIS
+
+    %% Analysis Integration
+    TEXT_ANALYSIS --> SCORE
+    USER_BEHAVIOR --> SCORE
+    TIMING --> SCORE
+    RATING --> SCORE
+
+    %% Final Output
+    SCORE --> BREAKDOWN
+    BREAKDOWN --> RECOMMENDATION
+    SCORE --> METRICS
+
+    %% Styling
+    classDef input fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef process fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef model fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef analysis fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef output fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class SINGLE,BATCH,LABELED input
+    class VALIDATE,TOKENIZE,AI_MODEL,BEHAVIOR,HEURISTIC process
+    class BERT,FINE_TUNED,SENTIMENT model
+    class TEXT_ANALYSIS,USER_BEHAVIOR,TIMING,RATING analysis
+    class SCORE,BREAKDOWN,RECOMMENDATION,METRICS output
+```
+
 ## 📁 Project Structure
 
 ```
