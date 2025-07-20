@@ -1,0 +1,11 @@
+text,label
+"This product exceeded my expectations! The quality is outstanding and I would definitely recommend it to anyone looking for a reliable solution.",OR
+"I bought this item last week and it works perfectly for my needs. Good value for the price.",OR
+"The customer service was excellent and the product arrived on time. Very satisfied with my purchase.",OR
+"This is absolutely the best product I've ever used! AMAZING quality and incredible performance! You MUST buy this NOW!!!",CG
+"I cannot believe how terrible this product is. It's the worst purchase I've ever made and I hate everything about it.",OR
+"This computer generated fake review is designed to test the detection system and should be flagged as suspicious.",CG
+"The item arrived damaged and the seller refused to help. Very disappointed with the experience.",OR
+"This product is perfect in every way! The best ever! Incredible! Amazing! Fantastic! Wonderful! Outstanding!",CG
+"I've been using this for a month now and it performs as advertised. No major issues so far.",OR
+"The packaging was secure and the product matches the description. Would buy again.",OR 
